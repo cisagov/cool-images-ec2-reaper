@@ -1,8 +1,8 @@
-# skeleton-tf-module #
+# cool-images-ec2-reaper #
 
-[![GitHub Build Status](https://github.com/cisagov/skeleton-tf-module/workflows/build/badge.svg)](https://github.com/cisagov/skeleton-tf-module/actions)
-[![License](https://img.shields.io/github/license/cisagov/skeleton-tf-module)](https://spdx.org/licenses/)
-[![CodeQL](https://github.com/cisagov/skeleton-tf-module/workflows/CodeQL/badge.svg)](https://github.com/cisagov/skeleton-tf-module/actions/workflows/codeql-analysis.yml)
+[![GitHub Build Status](https://github.com/cisagov/cool-images-ec2-reaper/workflows/build/badge.svg)](https://github.com/cisagov/cool-images-ec2-reaper/actions)
+[![License](https://img.shields.io/github/license/cisagov/cool-images-ec2-reaper)](https://spdx.org/licenses/)
+[![CodeQL](https://github.com/cisagov/cool-images-ec2-reaper/workflows/CodeQL/badge.svg)](https://github.com/cisagov/cool-images-ec2-reaper/actions/workflows/codeql-analysis.yml)
 
 This is a generic skeleton project that can be used to quickly get a
 new [cisagov](https://github.com/cisagov) [Terraform
@@ -21,7 +21,7 @@ more details on Terraform modules and the standard module structure.
 
 ```hcl
 module "example" {
-  source = "github.com/cisagov/skeleton-tf-module?ref=v1.1.0"
+  source = "github.com/cisagov/cool-images-ec2-reaper?ref=v0.0.1"
 
   aws_region            = "us-west-1"
   aws_availability_zone = "b"
@@ -31,7 +31,7 @@ module "example" {
 
 ## Examples ##
 
-- [Basic usage](https://github.com/cisagov/skeleton-tf-module/tree/develop/examples/basic_usage)
+- [Basic usage](https://github.com/cisagov/cool-images-ec2-reaper/tree/develop/examples/basic_usage)
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements ##
