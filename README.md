@@ -4,18 +4,58 @@
 [![License](https://img.shields.io/github/license/cisagov/cool-images-ec2-reaper)](https://spdx.org/licenses/)
 [![CodeQL](https://github.com/cisagov/cool-images-ec2-reaper/workflows/CodeQL/badge.svg)](https://github.com/cisagov/cool-images-ec2-reaper/actions/workflows/codeql-analysis.yml)
 
-This is a generic skeleton project that can be used to quickly get a
-new [cisagov](https://github.com/cisagov) [Terraform
-module](https://www.terraform.io/docs/modules/index.html) GitHub
-repository started.  This skeleton project contains [licensing
-information](LICENSE), as well as [pre-commit
-hooks](https://pre-commit.com) and
-[GitHub Actions](https://github.com/features/actions) configurations
-appropriate for the major languages that we use.
+Terraform code to deploy the
+[cisagov/ec2-reaper-lambda](https://github.com/cisagov/ec2-reaper-lambda)
+Lambda function in the COOL Images account.  The Lambda runs on a
+fixed schedule and terminates EC2 instances, in every enabled region,
+that have existed longer than a maximum age.  These are normally
+instances launched by Packer builds that failed to terminate on their
+own.
 
-See the [Terraform
-documentation](https://www.terraform.io/docs/modules/index.html) for
-more details on Terraform modules and the standard module structure.
+Whenever an instance is terminated or skipped (because termination
+protection is enabled), or an error occurs, the Lambda publishes a
+summary to an SNS topic that forwards it to the email address
+associated with the Images account.
+
+## Pre-requisites ##
+
+- [Terraform](https://www.terraform.io/) installed on your system.
+- An accessible AWS S3 bucket to store Terraform state
+  (specified in [backend.tf](backend.tf)).
+- An accessible AWS DynamoDB database to store the Terraform state lock
+  (specified in [backend.tf](backend.tf)).
+- Access to all of the Terraform remote states specified in
+  [remote_states.tf](remote_states.tf).
+- The following COOL accounts and roles must have been created:
+  - Images:
+    [`cisagov/cool-accounts/images`](https://github.com/cisagov/cool-accounts/tree/develop/images)
+  - Master:
+    [`cisagov/cool-accounts/master`](https://github.com/cisagov/cool-accounts/tree/develop/master)
+  - Terraform:
+    [`cisagov/cool-accounts/terraform`](https://github.com/cisagov/cool-accounts/tree/develop/terraform)
+- A deployment package built from
+  [cisagov/ec2-reaper-lambda](https://github.com/cisagov/ec2-reaper-lambda)
+  must have been uploaded to the Lambda deployment bucket in the
+  Terraform account, at the key given by `lambda_key`.
+
+## Usage ##
+
+This is a root module that uses one Terraform workspace per COOL
+environment (e.g. `dev-a`, `staging-a`, `production`).  For example:
+
+```console
+terraform init --backend-config=dev-a.tfconfig
+terraform workspace select dev-a
+terraform apply -var-file=dev-a.tfvars
+```
+
+Setting `dry_run` to `true` deploys the Lambda so that it reports the
+instances it would terminate without terminating any of them.  This
+is a good way to verify a new deployment.
+
+After the first apply, the Images account email will receive a
+message asking it to confirm its subscription to the SNS topic.  No
+summaries are delivered until the subscription is confirmed.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements ##
@@ -95,13 +135,6 @@ more details on Terraform modules and the standard module structure.
 
 Running `pre-commit` requires running `terraform init` in every directory that
 contains Terraform code. In this repository, this is only the main directory.
-
-## New Repositories from a Skeleton ##
-
-Please see our [Project Setup guide](https://github.com/cisagov/development-guide/tree/develop/project_setup)
-for step-by-step instructions on how to start a new repository from
-a skeleton. This will save you time and effort when configuring a
-new repository!
 
 ## Contributing ##
 
