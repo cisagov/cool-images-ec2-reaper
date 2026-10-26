@@ -17,22 +17,6 @@ See the [Terraform
 documentation](https://www.terraform.io/docs/modules/index.html) for
 more details on Terraform modules and the standard module structure.
 
-## Usage ##
-
-```hcl
-module "example" {
-  source = "github.com/cisagov/cool-images-ec2-reaper?ref=v0.0.1"
-
-  aws_region            = "us-west-1"
-  aws_availability_zone = "b"
-  subnet_id             = "subnet-0123456789abcdef0"
-}
-```
-
-## Examples ##
-
-- [Basic usage](https://github.com/cisagov/cool-images-ec2-reaper/tree/develop/examples/basic_usage)
-
 <!-- BEGIN_TF_DOCS -->
 ## Requirements ##
 
@@ -43,9 +27,7 @@ module "example" {
 
 ## Providers ##
 
-| Name | Version |
-| ---- | ------- |
-| aws | >= 4.9 |
+No providers.
 
 ## Modules ##
 
@@ -53,37 +35,21 @@ No modules.
 
 ## Resources ##
 
-| Name | Type |
-| ---- | ---- |
-| [aws_instance.example](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance) | resource |
-| [aws_ami.example](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami) | data source |
-| [aws_default_tags.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/default_tags) | data source |
+No resources.
 
 ## Inputs ##
 
-| Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
-| ami\_owner\_account\_id | The ID of the AWS account that owns the Example AMI, or "self" if the AMI is owned by the same account as the provisioner. | `string` | `"self"` | no |
-| aws\_availability\_zone | The AWS availability zone to deploy into (e.g. a, b, c, etc.). | `string` | `"a"` | no |
-| aws\_region | The AWS region to deploy into (e.g. us-east-1). | `string` | `"us-east-1"` | no |
-| subnet\_id | The ID of the AWS subnet to deploy into (e.g. subnet-0123456789abcdef0). | `string` | n/a | yes |
+No inputs.
 
 ## Outputs ##
 
-| Name | Description |
-| ---- | ----------- |
-| arn | The EC2 instance ARN. |
-| availability\_zone | The AZ where the EC2 instance is deployed. |
-| id | The EC2 instance ID. |
-| private\_ip | The private IP of the EC2 instance. |
-| subnet\_id | The ID of the subnet where the EC2 instance is deployed. |
+No outputs.
 <!-- END_TF_DOCS -->
 
 ## Notes ##
 
 Running `pre-commit` requires running `terraform init` in every directory that
-contains Terraform code. In this repository, these are the main directory and
-every directory under `examples/`.
+contains Terraform code. In this repository, this is only the main directory.
 
 ## New Repositories from a Skeleton ##
 
