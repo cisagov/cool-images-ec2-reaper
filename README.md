@@ -42,12 +42,12 @@ each run sends at most one summary.
 ## Usage ##
 
 This is a root module that uses one Terraform workspace per COOL
-environment (e.g. `dev-a`, `staging-a`, `production`).  For example:
+environment (e.g. `dev`, `staging`, `production`).  For example:
 
 ```console
-terraform init --backend-config=dev-a.tfconfig
-terraform workspace select dev-a
-terraform apply -var-file=dev-a.tfvars
+terraform init --backend-config=dev.tfconfig
+terraform workspace select dev
+terraform apply -var-file=dev.tfvars
 ```
 
 Setting `dry_run` to `true` deploys the Lambda so that it reports the
