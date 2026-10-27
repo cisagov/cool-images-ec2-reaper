@@ -24,6 +24,15 @@ resource "aws_lambda_function" "ec2_reaper" {
   timeout       = 900
 }
 
+# Don't retry failed runs.  A retry would resend the summary, and the next
+# scheduled run tries again anyway.
+resource "aws_lambda_function_event_invoke_config" "ec2_reaper" {
+  provider = aws.imagesprovisionaccount
+
+  function_name          = aws_lambda_function.ec2_reaper.function_name
+  maximum_retry_attempts = 0
+}
+
 # The CloudWatch log group for the Lambda function
 resource "aws_cloudwatch_log_group" "lambda_logs" {
   provider = aws.imagesprovisionaccount

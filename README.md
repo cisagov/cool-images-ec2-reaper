@@ -15,7 +15,8 @@ own.
 Whenever an instance is terminated or skipped (because termination
 protection is enabled), or an error occurs, the Lambda publishes a
 summary to an SNS topic that forwards it to the email address
-associated with the Images account.
+associated with the Images account.  A failed run is not retried, so
+each run sends at most one summary.
 
 ## Pre-requisites ##
 
@@ -90,6 +91,7 @@ summaries are delivered until the subscription is confirmed.
 | [aws_iam_role.lambdaexecution_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
 | [aws_iam_role_policy_attachment.lambdaexecution_policy_attachment](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 | [aws_lambda_function.ec2_reaper](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function) | resource |
+| [aws_lambda_function_event_invoke_config.ec2_reaper](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function_event_invoke_config) | resource |
 | [aws_lambda_permission.allow_cloudwatch](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_permission) | resource |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
 | [aws_caller_identity.images](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
