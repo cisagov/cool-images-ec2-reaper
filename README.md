@@ -36,8 +36,8 @@ each run sends at most one summary.
     [`cisagov/cool-accounts/terraform`](https://github.com/cisagov/cool-accounts/tree/develop/terraform)
 - A deployment package built from
   [cisagov/ec2-reaper-lambda](https://github.com/cisagov/ec2-reaper-lambda)
-  must have been uploaded to the Lambda deployment bucket in the
-  Terraform account, at the key given by `lambda_key`.
+  must have been uploaded to the S3 bucket specified by
+  `lambda_bucket_name`, at the key given by `lambda_key`.
 
 ## Usage ##
 
