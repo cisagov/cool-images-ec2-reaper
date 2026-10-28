@@ -52,6 +52,10 @@ terraform workspace select dev
 terraform apply -var-file=dev.tfvars
 ```
 
+The first time you deploy to an environment, its workspace does not
+exist yet.  Create it with `terraform workspace new` (e.g.
+`terraform workspace new dev`) instead of selecting it.
+
 Setting `dry_run` to `true` deploys the Lambda so that it reports the
 instances it would terminate without terminating any of them.  This
 is a good way to verify a new deployment.
