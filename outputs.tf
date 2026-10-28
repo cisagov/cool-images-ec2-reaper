@@ -1,24 +1,24 @@
-output "arn" {
-  description = "The EC2 instance ARN."
-  value       = aws_instance.example.arn
+output "cloudwatch_event_rule" {
+  description = "The CloudWatch event rule that kicks off the EC2 reaper Lambda function at a regular cadence."
+  value       = aws_cloudwatch_event_rule.lambda_schedule
 }
 
-output "availability_zone" {
-  description = "The AZ where the EC2 instance is deployed."
-  value       = aws_instance.example.availability_zone
+output "cloudwatch_log_group" {
+  description = "The CloudWatch log group where the EC2 reaper Lambda function's logs are written."
+  value       = aws_cloudwatch_log_group.lambda_logs
 }
 
-output "id" {
-  description = "The EC2 instance ID."
-  value       = aws_instance.example.id
+output "lambda_function" {
+  description = "The Lambda function that terminates EC2 instances that have existed longer than a maximum age."
+  value       = aws_lambda_function.ec2_reaper
 }
 
-output "private_ip" {
-  description = "The private IP of the EC2 instance."
-  value       = aws_instance.example.private_ip
+output "lambda_role" {
+  description = "The IAM role used by the EC2 reaper Lambda function."
+  value       = aws_iam_role.lambdaexecution_role
 }
 
-output "subnet_id" {
-  description = "The ID of the subnet where the EC2 instance is deployed."
-  value       = aws_instance.example.subnet_id
+output "sns_topic" {
+  description = "The SNS topic to which the EC2 reaper Lambda function publishes its summaries."
+  value       = module.ec2_reaper_sns.sns_topic
 }
