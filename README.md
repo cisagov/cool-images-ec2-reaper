@@ -16,7 +16,9 @@ Whenever an instance is terminated or skipped (because termination
 protection is enabled), or an error occurs, the Lambda publishes a
 summary to an SNS topic that forwards it to the email address
 associated with the Images account.  A failed run is not retried, so
-each run sends at most one summary.
+each run sends at most one summary.  A record of each failed run,
+including its error, is also sent to the topic.  This covers failures
+that keep the Lambda from sending a summary, such as a timeout.
 
 ## Pre-requisites ##
 

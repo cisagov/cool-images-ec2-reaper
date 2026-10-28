@@ -25,10 +25,16 @@ resource "aws_lambda_function" "ec2_reaper" {
 }
 
 # Don't retry failed runs.  A retry would resend the summary, and the next
-# scheduled run tries again anyway.
+# scheduled run tries again anyway.  Report each failure to the SNS topic,
+# since a timeout or crash keeps the Lambda from reporting it.
 resource "aws_lambda_function_event_invoke_config" "ec2_reaper" {
   provider = aws.imagesprovisionaccount
 
+  destination_config {
+    on_failure {
+      destination = module.ec2_reaper_sns.sns_topic.arn
+    }
+  }
   function_name          = aws_lambda_function.ec2_reaper.function_name
   maximum_retry_attempts = 0
 }
