@@ -59,6 +59,14 @@ resource "aws_cloudwatch_event_rule" "lambda_schedule" {
 resource "aws_cloudwatch_event_target" "lambda_schedule" {
   provider = aws.imagesprovisionaccount
 
+  # Apply policy changes, such as new terminable_instance_tags, before input
+  # changes, such as disabling dry runs, so that a run never pairs new input
+  # with the old policy.
+  depends_on = [
+    aws_iam_policy.lambdaexecution_policy,
+    aws_iam_role_policy_attachment.lambdaexecution_policy_attachment,
+  ]
+
   arn = aws_lambda_function.ec2_reaper.arn
   input = jsonencode({
     dry_run           = var.dry_run
