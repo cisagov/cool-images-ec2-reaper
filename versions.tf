@@ -11,7 +11,8 @@ terraform {
     }
   }
 
-  # Version 1.1 of Terraform is the first version to support the
-  # nullable key in variable definitions.
-  required_version = "~> 1.1"
+  # Version 1.2 of Terraform is the first version to support
+  # preconditions, which are used to check the length of the EventBridge
+  # rule name in lambda.tf.
+  required_version = "~> 1.2"
 }

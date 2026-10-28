@@ -69,7 +69,7 @@ summaries are delivered until the subscription is confirmed.
 
 | Name | Version |
 | ---- | ------- |
-| terraform | ~> 1.1 |
+| terraform | ~> 1.2 |
 | aws | ~> 6.21 |
 
 ## Providers ##

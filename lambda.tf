@@ -52,8 +52,16 @@ resource "aws_cloudwatch_event_rule" "lambda_schedule" {
   provider = aws.imagesprovisionaccount
 
   description         = format("Executes %s Lambda every %s.", var.lambda_function_name, var.lambda_schedule_interval)
-  name                = format("%s-every-%s", var.lambda_function_name, replace(var.lambda_schedule_interval, " ", "-"))
+  name                = local.lambda_schedule_rule_name
   schedule_expression = format("rate(%s)", var.lambda_schedule_interval)
+
+  lifecycle {
+    # Fail at plan time rather than partway through an apply.
+    precondition {
+      condition     = length(local.lambda_schedule_rule_name) <= 64
+      error_message = "The EventBridge rule name generated from lambda_function_name and lambda_schedule_interval must be no longer than 64 characters."
+    }
+  }
 }
 
 resource "aws_cloudwatch_event_target" "lambda_schedule" {

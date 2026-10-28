@@ -29,4 +29,7 @@ locals {
 
   # The Images account ID
   images_account_id = data.aws_caller_identity.images.account_id
+
+  # The name of the EventBridge rule that schedules the Lambda function
+  lambda_schedule_rule_name = format("%s-every-%s", var.lambda_function_name, replace(var.lambda_schedule_interval, " ", "-"))
 }
