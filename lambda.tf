@@ -67,12 +67,14 @@ resource "aws_cloudwatch_event_rule" "lambda_schedule" {
 resource "aws_cloudwatch_event_target" "lambda_schedule" {
   provider = aws.imagesprovisionaccount
 
-  # Apply policy changes, such as new terminable_instance_tags, before input
-  # changes, such as disabling dry runs, so that a run never pairs new input
-  # with the old policy.
+  # Put everything a run relies on in place before the target's input changes,
+  # so that new input, such as dry runs being disabled, never runs with an old
+  # policy, a missing invoke permission, or the default retries.
   depends_on = [
     aws_iam_policy.lambdaexecution_policy,
     aws_iam_role_policy_attachment.lambdaexecution_policy_attachment,
+    aws_lambda_function_event_invoke_config.ec2_reaper,
+    aws_lambda_permission.allow_cloudwatch,
   ]
 
   arn = aws_lambda_function.ec2_reaper.arn
