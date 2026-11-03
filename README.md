@@ -4,93 +4,145 @@
 [![License](https://img.shields.io/github/license/cisagov/cool-images-ec2-reaper)](https://spdx.org/licenses/)
 [![CodeQL](https://github.com/cisagov/cool-images-ec2-reaper/workflows/CodeQL/badge.svg)](https://github.com/cisagov/cool-images-ec2-reaper/actions/workflows/codeql-analysis.yml)
 
-This is a generic skeleton project that can be used to quickly get a
-new [cisagov](https://github.com/cisagov) [Terraform
-module](https://www.terraform.io/docs/modules/index.html) GitHub
-repository started.  This skeleton project contains [licensing
-information](LICENSE), as well as [pre-commit
-hooks](https://pre-commit.com) and
-[GitHub Actions](https://github.com/features/actions) configurations
-appropriate for the major languages that we use.
+Terraform code to deploy the
+[cisagov/ec2-reaper-lambda](https://github.com/cisagov/ec2-reaper-lambda)
+Lambda function in the COOL Images account.  The Lambda runs on a
+fixed schedule and terminates EC2 instances, in every enabled region,
+that have existed longer than a maximum age.  These are normally
+instances launched by Packer builds that failed to terminate on their
+own.
 
-See the [Terraform
-documentation](https://www.terraform.io/docs/modules/index.html) for
-more details on Terraform modules and the standard module structure.
+Whenever an instance is terminated or skipped (because termination
+protection is enabled), or an error occurs, the Lambda publishes a
+summary to an SNS topic that forwards it to the email address
+associated with the Images account.  A failed run is not retried, so
+each run sends at most one summary.  A record of each failed run,
+including its error, is also sent to the topic.  This covers failures
+that keep the Lambda from sending a summary, such as a timeout.
+
+## Pre-requisites ##
+
+- [Terraform](https://www.terraform.io/) installed on your system.
+- An accessible AWS S3 bucket to store Terraform state
+  (specified in [backend.tf](backend.tf)).
+- An accessible AWS DynamoDB database to store the Terraform state lock
+  (specified in [backend.tf](backend.tf)).
+- Access to all of the Terraform remote states specified in
+  [remote_states.tf](remote_states.tf).
+- The following COOL accounts and roles must have been created:
+  - Images:
+    [`cisagov/cool-accounts/images`](https://github.com/cisagov/cool-accounts/tree/develop/images)
+  - Master:
+    [`cisagov/cool-accounts/master`](https://github.com/cisagov/cool-accounts/tree/develop/master)
+  - Terraform:
+    [`cisagov/cool-accounts/terraform`](https://github.com/cisagov/cool-accounts/tree/develop/terraform)
+- A deployment package built from
+  [cisagov/ec2-reaper-lambda](https://github.com/cisagov/ec2-reaper-lambda)
+  must have been uploaded to the S3 bucket specified by
+  `lambda_bucket_name`, at the key given by `lambda_key`.
 
 ## Usage ##
 
-```hcl
-module "example" {
-  source = "github.com/cisagov/cool-images-ec2-reaper?ref=v0.0.1"
+This is a root module that uses one Terraform workspace per COOL
+environment (e.g. `dev`, `staging`, `production`).  For example:
 
-  aws_region            = "us-west-1"
-  aws_availability_zone = "b"
-  subnet_id             = "subnet-0123456789abcdef0"
-}
+```console
+terraform init --backend-config=dev.tfconfig
+terraform workspace select dev
+terraform apply -var-file=dev.tfvars
 ```
 
-## Examples ##
+The first time you deploy to an environment, its workspace does not
+exist yet.  Create it with `terraform workspace new` (e.g.
+`terraform workspace new dev`) instead of selecting it.
 
-- [Basic usage](https://github.com/cisagov/cool-images-ec2-reaper/tree/develop/examples/basic_usage)
+Setting `dry_run` to `true` deploys the Lambda so that it reports the
+instances it would terminate without terminating any of them.  This
+is a good way to verify a new deployment.
+
+After the first apply, the Images account email will receive a
+message asking it to confirm its subscription to the SNS topic.  No
+summaries are delivered until the subscription is confirmed.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements ##
 
 | Name | Version |
 | ---- | ------- |
-| terraform | >= 1.1 |
-| aws | >= 4.9 |
+| terraform | ~> 1.2 |
+| aws | ~> 6.21 |
 
 ## Providers ##
 
 | Name | Version |
 | ---- | ------- |
-| aws | >= 4.9 |
+| aws | ~> 6.21 |
+| aws.imagesprovisionaccount | ~> 6.21 |
+| terraform | n/a |
 
 ## Modules ##
 
-No modules.
+| Name | Source | Version |
+| ---- | ------ | ------- |
+| ec2\_reaper\_sns | github.com/cisagov/sns-send-to-account-email-tf-module | n/a |
 
 ## Resources ##
 
 | Name | Type |
 | ---- | ---- |
-| [aws_instance.example](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance) | resource |
-| [aws_ami.example](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami) | data source |
-| [aws_default_tags.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/default_tags) | data source |
+| [aws_cloudwatch_event_rule.lambda_schedule](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_rule) | resource |
+| [aws_cloudwatch_event_target.lambda_schedule](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_target) | resource |
+| [aws_cloudwatch_log_group.lambda_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
+| [aws_iam_policy.lambdaexecution_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
+| [aws_iam_role.lambdaexecution_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
+| [aws_iam_role_policy_attachment.lambdaexecution_policy_attachment](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
+| [aws_lambda_function.ec2_reaper](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function) | resource |
+| [aws_lambda_function_event_invoke_config.ec2_reaper](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function_event_invoke_config) | resource |
+| [aws_lambda_permission.allow_cloudwatch](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_permission) | resource |
+| [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
+| [aws_caller_identity.images](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
+| [aws_iam_policy_document.lambda_assume_role_doc](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [aws_iam_policy_document.lambdaexecution_doc](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [aws_partition.images](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/partition) | data source |
+| [terraform_remote_state.images](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/data-sources/remote_state) | data source |
+| [terraform_remote_state.master](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/data-sources/remote_state) | data source |
 
 ## Inputs ##
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
-| ami\_owner\_account\_id | The ID of the AWS account that owns the Example AMI, or "self" if the AMI is owned by the same account as the provisioner. | `string` | `"self"` | no |
-| aws\_availability\_zone | The AWS availability zone to deploy into (e.g. a, b, c, etc.). | `string` | `"a"` | no |
-| aws\_region | The AWS region to deploy into (e.g. us-east-1). | `string` | `"us-east-1"` | no |
-| subnet\_id | The ID of the AWS subnet to deploy into (e.g. subnet-0123456789abcdef0). | `string` | n/a | yes |
+| aws\_region | The AWS region where the non-global resources are to be provisioned (e.g. "us-east-1"). | `string` | `"us-east-1"` | no |
+| dry\_run | Whether the EC2 reaper Lambda should only report the instances it would terminate, without terminating them. | `bool` | `false` | no |
+| lambda\_bucket\_name | The name of the S3 bucket containing the EC2 reaper Lambda function deployment package. | `string` | n/a | yes |
+| lambda\_function\_description | The description of the Lambda function that terminates EC2 instances that have existed longer than a maximum age. | `string` | `"Lambda function to terminate EC2 instances that have existed longer than a maximum age."` | no |
+| lambda\_function\_name | The name of the Lambda function that terminates EC2 instances that have existed longer than a maximum age. | `string` | `"ec2-reaper"` | no |
+| lambda\_key | The S3 key associated with the EC2 reaper Lambda function deployment package. | `string` | n/a | yes |
+| lambda\_schedule\_interval | A string representing a rate expression defining the cadence at which the Lambda function is to be run.  See [the relevant AWS documentation](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-scheduled-rule-pattern.html#eb-rate-expressions) for more details. | `string` | `"4 hours"` | no |
+| lambdaexecution\_role\_description | The description to associate with the IAM role (and policy) that allows the EC2 reaper Lambda to find and terminate EC2 instances that have existed longer than a maximum age, and to publish a summary to its SNS topic. | `string` | `"Allows the EC2 reaper Lambda to find and terminate EC2 instances that have existed longer than a maximum age, and to publish a summary to its SNS topic."` | no |
+| lambdaexecution\_role\_name | The name to assign the IAM role (and policy) that allows the EC2 reaper Lambda to find and terminate EC2 instances that have existed longer than a maximum age, and to publish a summary to its SNS topic. | `string` | `"EC2ReaperLambda"` | no |
+| max\_age\_hours | A strictly positive integer denoting the number of hours, measured from an instance's root volume attach time, after which the instance is terminated. | `number` | `24` | no |
+| sns\_topic\_display\_name | The display name of the SNS topic to which the EC2 reaper Lambda publishes its summaries. | `string` | `"EC2 Reaper"` | no |
+| sns\_topic\_name | The name of the SNS topic to which the EC2 reaper Lambda publishes its summaries. | `string` | `"ec2-reaper"` | no |
+| tags | Tags to apply to all AWS resources created. | `map(string)` | `{}` | no |
+| terminable\_instance\_tags | Tags that an EC2 instance must carry for the EC2 reaper Lambda to be permitted to terminate it (e.g. {"Team" = "VM Fusion - Development"}).  If empty, any instance in the account may be terminated.  Old instances without these tags are reported as errors in the summary. | `map(string)` | `{}` | no |
+| terminate\_stopped | Whether the EC2 reaper Lambda should also terminate stopped (and stopping) instances, rather than only running instances. | `bool` | `true` | no |
+| terraform\_state\_bucket | The name of the S3 bucket where Terraform state is stored. | `string` | n/a | yes |
 
 ## Outputs ##
 
 | Name | Description |
 | ---- | ----------- |
-| arn | The EC2 instance ARN. |
-| availability\_zone | The AZ where the EC2 instance is deployed. |
-| id | The EC2 instance ID. |
-| private\_ip | The private IP of the EC2 instance. |
-| subnet\_id | The ID of the subnet where the EC2 instance is deployed. |
+| cloudwatch\_event\_rule | The CloudWatch event rule that kicks off the EC2 reaper Lambda function at a regular cadence. |
+| cloudwatch\_log\_group | The CloudWatch log group where the EC2 reaper Lambda function's logs are written. |
+| lambda\_function | The Lambda function that terminates EC2 instances that have existed longer than a maximum age. |
+| lambda\_role | The IAM role used by the EC2 reaper Lambda function. |
+| sns\_topic | The SNS topic to which the EC2 reaper Lambda function publishes its summaries. |
 <!-- END_TF_DOCS -->
 
 ## Notes ##
 
 Running `pre-commit` requires running `terraform init` in every directory that
-contains Terraform code. In this repository, these are the main directory and
-every directory under `examples/`.
-
-## New Repositories from a Skeleton ##
-
-Please see our [Project Setup guide](https://github.com/cisagov/development-guide/tree/develop/project_setup)
-for step-by-step instructions on how to start a new repository from
-a skeleton. This will save you time and effort when configuring a
-new repository!
+contains Terraform code. In this repository, this is only the main directory.
 
 ## Contributing ##
 
